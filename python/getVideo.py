@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 #coding: utf-8
-#
-#1. 这是一个小脚本程序，可以批量下载网易公开课的一门课程，也可以单独下载课程中的某一个视频。
-#2. 用法简单，python getVideo.py 即可~
-#3. 下载位置默认为当前位置
 import os
 import sys
 import re
@@ -11,9 +7,22 @@ import urllib
 import requests
 from bs4 import BeautifulSoup as bs
 
-savePath = os.path.dirname(os.path.abspath(__file__))
-#inputUrl = raw_input("请输入网易公开课的视频链接: ")
-inputUrl = "http://open.163.com/movie/2011/5/K/3/M807BPK1K_M80A0VVK3.html"
+save_path = os.environ["HOME"] + "/Downloads/"
+input_url = raw_input("Please input a valid netease open course link: ")
+
+
+if not input_url:
+    print "Please input a valid url!"
+    sys.exit(1)
+
+def getPlaylistName(url):
+    '''
+    return the playlist name for mkdir for a playlist
+    '''
+    if url.endswith("html"):
+        return url.split("/")[-1].split(".")[0]
+    else:
+        return url.split("/")[-2]
 
 def getUrlList(url):
     resp = requests.get(url)
@@ -21,14 +30,16 @@ def getUrlList(url):
     #获取包含URL列表的JavaScript脚本代码(unicode)
     script = soup.find_all("script")[-2].get_text()
     pattern = re.compile(r"href:'http://open.163.com/.+?html'")
-    match = pattern.findall(script)
-    if match:
-        return match
+    urlist = pattern.findall(script)
+    if urlist:
+        print urlist
+        return urlist
+    else:
+        print "Url list is none!"
 
 def getVideo(url):
     resp = requests.get(url)
-    print type(resp.text)
-    #通过判断网页代码中是否含有'm3u8'字符来确定输入的链接是单个视频或视频集合
+    #it is single video if the string "m3u8" in the response text else playlist.
     if u"m3u8" in resp.text:
         url_pattern = re.compile(r"http://mov.bn.netease.com.+?m3u8")
         title_pattern = re.compile(r"title :.+?,")
@@ -37,7 +48,17 @@ def getVideo(url):
         if url_match and title_match:
             title = title_match.group().split("'")[1].encode("utf-8") + ".mp4"
             mp4url = url_match.group().replace("m3u8", "mp4")
-            ret = urllib.urlretrieve(mp4url, title)
+            ret = urllib.urlretrieve(mp4url, save_path + title)
+            print "**" * 20 + "Tips" + "**" * 20
+            print "{filename} has been saved at {location}".format(filename=title, location=save_path)
+    else:
+        new_path = save_path + getPlaylistName(url)
+        if not os.path.exists(new_path):
+            os.mkdir(new_path)
+        urlist = getUrlList(url)
+        for u in urlist:
+            getVideo(u)
+
 
 
 
@@ -46,4 +67,4 @@ def getVideo(url):
 
 if __name__ == "__main__":
     #print getUrlList(inputUrl)
-    getVideo(inputUrl)
+    getVideo(input_url)
