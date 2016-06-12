@@ -28,14 +28,15 @@ def getUrlList(url):
     resp = requests.get(url)
     soup = bs(resp.text, "lxml")
     #获取包含URL列表的JavaScript脚本代码(unicode)
-    script = soup.find_all("script")[-2].get_text()
-    pattern = re.compile(r"href:'http://open.163.com/.+?html'")
-    urlist = pattern.findall(script)
-    if urlist:
-        print urlist
-        return urlist
-    else:
-        print "Url list is none!"
+    table = soup.find_all(class_="m-clist", style="")
+    print table
+    #pattern = re.compile(r"href:'http://open.163.com/.+?html'")
+    #urlist = pattern.findall(script)
+    #if urlist:
+    #    print urlist
+    #    return urlist
+    #else:
+    #    print "Url list is none!"
 
 def getVideo(url):
     resp = requests.get(url)
@@ -66,5 +67,5 @@ def getVideo(url):
 
 
 if __name__ == "__main__":
-    #print getUrlList(inputUrl)
-    getVideo(input_url)
+    getUrlList(input_url)
+    #getVideo(input_url)
