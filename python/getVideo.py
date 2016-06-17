@@ -30,7 +30,7 @@ headers = {
 class Downloader(object):
     def __init__(self, url):
         self.url = url
-        resp = requests.get(self.url, headers=headers)
+        resp = requests.get(self.url, headers=headers, timeout=10)
         self.soup = bs(resp.text, "lxml")
         if "m3u8" in resp.text:
             self.single = True
@@ -76,7 +76,7 @@ class Downloader(object):
 
     def getVideo(self):
         for li in self.urlist:
-            resp = requests.get(li["url"], headers=headers)
+            resp = requests.get(li["url"], headers=headers, timeout=10)
             title = li["title"] + ".mp4"
             url_pattern = re.compile(r"http://mov.bn.netease.com.+?m3u8")
             url_match = url_pattern.search(resp.text)
